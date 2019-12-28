@@ -16,8 +16,15 @@ class Player(Entity):
         # sprite should be the name of an image file in the 'images' directory
         pygame.init()
         super().__init__(x, y, scale)
-        self.sprite = pygame.image.load(os.path.join('images', sprite))
-        pygame.transform.scale(self.sprite, self.size)
+        if os.path.basename(os.getcwd()) != 'images':
+            if os.path.basename(os.getcwd()) == 'levels':
+                os.chdir('../images')
+            elif os.path.basename(os.getcwd()) == 'maze_game':
+                os.chdir('images')
+            else:
+                raise Exception('where are you??')
+        self.sprite = pygame.image.load(sprite)
+        self.sprite = pygame.transform.scale(self.sprite, self.size)
         if collides:
             self.collides = True
             self.rect = self.sprite.get_bounding_rect()

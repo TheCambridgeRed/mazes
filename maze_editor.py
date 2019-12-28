@@ -39,17 +39,26 @@ def render_loop(screen, x, y, scale, cells_list):
                     sys.exit()
                     
             elif event.type == pygame.MOUSEBUTTONDOWN:
-                for cell in cells_list:
-                    if cell.rect.collidepoint(pygame.mouse.get_pos()):
-                        cell.toggle()
+                for line in cells_list:
+                    for cell in line:
+                        if cell.rect.collidepoint(pygame.mouse.get_pos()):
+                            cell.toggle()
                 draw_all(screen, cells_list)
 
 
 def generate_blank_map(x, y, scale):
     cells_list = []
-    for i in range(0, x):
-        for j in range(0, y):
-            cells_list.append(MazeCell(i, j, scale))
+
+    j = 0
+
+    while j < x:
+        i = 0
+        inner_list = []
+        while i < y:
+            inner_list.append(MazeCell(j, i, scale))
+            i += 1
+        cells_list.append(inner_list)
+        j += 1
 
     return cells_list
             

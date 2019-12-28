@@ -13,7 +13,7 @@ class Menu:
         self.new_level = None
         self.arrow_position = 0
         
-    def handle_all(self, clock):
+    def handle_all(self, clock, scenes):
         next_scene = self.handle_input()
 
         if next_scene == scenes['menu']:
@@ -27,15 +27,16 @@ class Menu:
                 sys.exit()
 
             elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_DOWN:
+                if event.key == pygame.K_ESCAPE:
+                    sys.exit()
+                elif event.key == pygame.K_DOWN:
                     if self.arrow_position < len(self.levels_list) - 1: 
                         self.arrow_position += 1
                 elif event.key == pygame.K_UP:
                     if self.arrow_position > 0:
                         self.arrow_position -= 1
                 elif event.key == pygame.K_RETURN:
-                    self.new_level = load_level(self.levels_list[self.arrow_position] + '.lvl')
-                    return scenes['game']
+                    return scenes[self.levels_list[self.arrow_position]]
 
         return scenes['menu']
                         
@@ -65,7 +66,13 @@ class Menu:
         list_font = pygame.font.SysFont('liberationsans', 36)
         
         if os.path.basename(os.getcwd()) != 'levels':
-            os.chdir('levels')
+            if os.path.basename(os.getcwd()) == 'maze_game':
+                os.chdir('levels')
+            elif os.path.basename(os.getcwd()) == 'images':
+                os.chdir('../levels')
+            else:
+                raise Exception('where are you??')
+
            
         files_list = os.listdir()
         level_regexp = re.compile('(\d-\d{2})(\.lvl)')
@@ -74,7 +81,8 @@ class Menu:
             match = level_regexp.findall(filename)
             if match:
                 self.levels_list.append(match[0][0])
-        
+                
+        self.levels_list.sort()
         for i, level_name in enumerate(self.levels_list):
             level_name_size = list_font.size(level_name)
             level_name_width = level_name_size[0]
@@ -97,59 +105,98 @@ class Menu:
 
         
 class Game:
-    def __init__(self):
-        self.size = (0, 0)
-        self.maze = []
-        self.player = Player()
+    def __init__(self, level):
+        self.level_name = level
+        self.level = load_level(self.level_name)
+        self.x = self.level.x
+        self.y = self.level.y
+        self.scale = self.level.scale
+        self.width = self.x * self.scale
+        self.height = self.y * self.scale
+        self.size = (self.width, self.height)
+        self.maze = self.level.cells_list
+        for line in self.maze:
+            for cell in line:
+                if cell.cell_type == CellType.START:
+                    self.player_x = cell.x
+                    self.player_y = cell.y
+        self.player = Player(self.player_x, self.player_y, self.scale)
     
-    def handle_all(self, clock):
-        next_scene = self.handle_input()
-        if next_scene == scenes['game']:
+    def handle_all(self, clock, scenes):
+        next_scene = self.handle_input(scenes)
+        if next_scene != scenes['menu']:
             self.render(clock)
-            return scenes['game']
-        else:
-            return scenes['menu']
+        return next_scene
 
-    def handle_input(self):
+    def handle_input(self, scenes):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 sys.exit()
 
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
+                    self.__init__(self.level_name)
                     return scenes['menu']
-                
-        return scenes['game']
-        
+                elif (event.key == pygame.K_DOWN and
+                      self.maze[self.player.x][self.player.y + 1].cell_type != CellType.FLOOR):
+                    self.player.y += 1
+                elif (event.key == pygame.K_UP and
+                      self.maze[self.player.x][self.player.y - 1].cell_type != CellType.FLOOR):
+                    self.player.y -= 1
+                elif (event.key == pygame.K_LEFT and
+                      self.maze[self.player.x - 1][self.player.y].cell_type != CellType.FLOOR):
+                    self.player.x -= 1
+                elif (event.key == pygame.K_RIGHT and
+                      self.maze[self.player.x + 1][self.player.y].cell_type != CellType.FLOOR):
+                    self.player.x += 1
+
+        if self.maze[self.player.x][self.player.y].cell_type == CellType.END:
+            print('Winner!')
+            return scenes['win_screen']
+
+        return self
+            
     def render(self, clock):
         screen = pygame.display.set_mode(self.size)
 
-        for cell in self.maze:
-            if cell.cell_type == CellType.START:
-                self.player.x = cell.x
-                self.player.y = cell.y
-
-        self.player.size = self.player.width, self.player.height = self.size
-        screen.blit(self.player.sprite, (self.player.x, self.player.y))
-        
         clock.tick(60)
         draw_all(screen, self.maze)
-
-    
-scenes = {'menu': Menu(),
-          'game': Game()}
+        screen.blit(self.player.sprite, (self.player.x * self.scale, self.player.y * self.scale))
+        pygame.display.update()
 
 
+class WinScreen:
+    def handle_all(self, clock, scenes):
+        return self
+
+        
 if __name__ == '__main__':
     pygame.init()
-    
+
+    if os.path.basename(os.getcwd()) != 'levels':
+        if os.path.basename(os.getcwd()) == 'maze_game':
+            os.chdir('levels')
+        elif os.path.basename(os.getcwd()) == 'images':
+            os.chdir('../levels')
+        else:
+            raise Exception('where are you??')
+
+    scenes = {'menu': Menu(), 'win_screen': WinScreen()}
+    files_list = os.listdir()
+    level_regexp = re.compile('(\d-\d{2})(\.lvl)')
+        
+    for filename in sorted(files_list):
+        match = level_regexp.findall(filename)
+        if match:
+            filename = match[0][0]
+            fullname = filename + match[0][1]
+            
+            scenes[filename] = Game(fullname)
+        
     clock = pygame.time.Clock()
 
     scene = scenes['menu']
     
     while True:
-        next_scene = scene.handle_all(clock)
-        if scene == scenes['menu'] and next_scene == scenes['game']:
-            next_scene.size, next_scene.maze = level_params(scene.new_level)
-        scene = next_scene
+        scene = scene.handle_all(clock, scenes)
         
