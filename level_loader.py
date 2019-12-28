@@ -2,23 +2,27 @@
 
 from maze_editor import draw_cells, draw_all
 from level import Level
-import pygame, sys, pickle
+import pygame, sys, pickle, os
 
 def load_level(level_string):
     with open (level_string, 'rb') as f:
         active_level = pickle.load(f)
+        
+    return active_level
 
-    x = active_level.x
-    y = active_level.y
-    scale = active_level.scale
-    cells_list = active_level.cells_list
+
+def level_params(level):
+    x = level.x
+    y = level.y
+    scale = level.scale
+    cells_list = level.cells_list
 
     size = width, height = x * scale, y * scale
 
     return size, cells_list
 
 
-def game_loop(screen, cells_list, clock):
+def view_loop(screen, cells_list, clock):
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -43,10 +47,10 @@ if __name__ == "__main__":
         pygame.display.set_caption('Mazes')
         clock = pygame.time.Clock()
 
-        game_loop(screen, cells_list, clock)
+        view_loop(screen, cells_list, clock)
 
     except IndexError:
         print('Please enter a level file to load')
-        
-    except FileNotFoundError:
-        print('Invalid filename for level')
+
+    except FileNotFoundError as e:
+        print(f'{e.filename} does not exist or is an invalid filename')
