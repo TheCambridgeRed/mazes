@@ -2,23 +2,8 @@
 
 from maze_cell import CellType, MazeCell
 from level import Level
+from render_functions import clear_screen, draw_cells, draw_all
 import pygame, sys, pickle, os
-
-
-def clear_screen(cells_list):
-    for cell in cells_list:
-        if cell.cell_type != CellType.FLOOR:
-            cell.cell_type = CellType.FLOOR
-
-
-def draw_cells(screen, cells_list):
-    for cell in cells_list:
-        cell.draw_me(screen)
-
-
-def draw_all(screen, cells_list):
-    draw_cells(screen, cells_list)
-    pygame.display.update()
 
 
 def save_level(x, y, scale, cells_list):
@@ -26,7 +11,7 @@ def save_level(x, y, scale, cells_list):
     level_to_save = Level(x, y, scale, cells_list)
     while True:
         try:
-            with open(f"levels/{name}", 'wb') as f:
+            with open(os.path.join('levels', name), 'wb') as f:
                 pickle.dump(level_to_save, f, pickle.HIGHEST_PROTOCOL)
                 print(f'Level saved as {name}')
                 break
