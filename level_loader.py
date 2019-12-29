@@ -35,12 +35,23 @@ def view_loop(screen, cells_list, clock):
                 
         clock.tick(60)
         draw_all(screen, cells_list)
+        pygame.display.update()
 
 
 if __name__ == "__main__":
     try:
-        size, cells_list = load_level(sys.argv[1])
+        if os.path.basename(os.getcwd()) != 'levels':
+            if os.path.basename(os.getcwd()) == 'maze_game':
+                os.chdir('levels')
+            elif os.path.basename(os.getcwd()) == 'images':
+                os.chdir('../levels')
+            else:
+                raise Exception('where are you??')
+            
+        level = load_level(sys.argv[1])
 
+        size, cells_list = level_params(level)
+        
         pygame.init()
 
         screen = pygame.display.set_mode(size)

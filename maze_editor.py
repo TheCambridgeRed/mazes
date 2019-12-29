@@ -23,6 +23,7 @@ def save_level(x, y, scale, cells_list):
 
 def render_loop(screen, x, y, scale, cells_list):
     draw_all(screen, cells_list)
+    pygame.display.update()
     
     while True:
         for event in pygame.event.get():
@@ -34,6 +35,7 @@ def render_loop(screen, x, y, scale, cells_list):
                 elif event.key == pygame.K_c:
                     clear_screen(cells_list)
                     draw_all(screen, cells_list)
+                    pygame.display.update()
 
                 elif event.key == pygame.K_ESCAPE or event.key == pygame.K_q:
                     sys.exit()
@@ -44,6 +46,7 @@ def render_loop(screen, x, y, scale, cells_list):
                         if cell.rect.collidepoint(pygame.mouse.get_pos()):
                             cell.toggle()
                 draw_all(screen, cells_list)
+                pygame.display.update()
 
 
 def generate_blank_map(x, y, scale):
