@@ -1,4 +1,5 @@
 class Cell:
+    # basic cell class with a position and a representation for debugging
     def __init__(self, x, y):
         self.x = x
         self.y = y

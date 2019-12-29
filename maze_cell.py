@@ -4,14 +4,19 @@ import pygame
 
 
 class CellType(Enum):
-    FLOOR = auto()
     WALL = auto()
+    FLOOR = auto()
     START = auto()
     END = auto()
 
 
 class MazeCell(Cell):
-    def __init__(self, x, y, scale, cell_type=CellType.FLOOR):
+    # MazeCell inherits from Cell and has extra attributes: scale for drawing,
+    # a pygame.Rect so it can be clicked on, and a CellType which determines
+    # how a Player interacts with the cell. It also has methods for drawing
+    # where colour is determined by its CellType and toggling for the level
+    # editor.
+    def __init__(self, x, y, scale, cell_type=CellType.WALL):
         super().__init__(x, y)
         self.scale = scale
         self.rect = pygame.Rect(self.x * self.scale, self.y * self.scale, self.scale, self.scale)
@@ -20,9 +25,9 @@ class MazeCell(Cell):
 
     def draw_me(self, screen):
         if self.cell_type == CellType.FLOOR:
-            colour = (179, 89, 0)
-        elif self.cell_type == CellType.WALL:
             colour = (92, 92, 92)
+        elif self.cell_type == CellType.WALL:
+            colour = (179, 89, 0)
         elif self.cell_type == CellType.START:
             colour = (255, 213, 0)
         elif self.cell_type == CellType.END:
