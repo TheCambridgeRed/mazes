@@ -126,6 +126,7 @@ class Game:
         self.width = self.x * self.scale
         self.height = self.y * self.scale
         self.size = (self.width, self.height)
+        
         self.maze = self.level.cells_list
         for line in self.maze:
             for cell in line:
@@ -133,6 +134,10 @@ class Game:
                     self.player_x = cell.x
                     self.player_y = cell.y
                     break
+            else:
+                continue
+            break
+            
         self.player = Player(self.player_x, self.player_y,
                              self.scale, 'player.png')
     
