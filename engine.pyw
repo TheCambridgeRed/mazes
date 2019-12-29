@@ -32,9 +32,13 @@ class Menu:
                 elif event.key == pygame.K_DOWN:
                     if self.arrow_position < len(self.levels_list) - 1: 
                         self.arrow_position += 1
+                    else:
+                        self.arrow_position = 0
                 elif event.key == pygame.K_UP:
                     if self.arrow_position > 0:
                         self.arrow_position -= 1
+                    else:
+                        self.arrow_position = len(self.levels_list) - 1
                 elif event.key == pygame.K_RETURN:
                     return scenes[self.levels_list[self.arrow_position]]
 
@@ -106,6 +110,14 @@ class Menu:
         
 class Game:
     def __init__(self, level):
+        if os.path.basename(os.getcwd()) != 'levels':
+            if os.path.basename(os.getcwd()) == 'maze_game':
+                os.chdir('levels')
+            elif os.path.basename(os.getcwd()) == 'images':
+                os.chdir('../levels')
+            else:
+                raise Exception('where are you??')
+
         self.level_name = level
         self.level = load_level(self.level_name)
         self.x = self.level.x
@@ -120,11 +132,13 @@ class Game:
                 if cell.cell_type == CellType.START:
                     self.player_x = cell.x
                     self.player_y = cell.y
-        self.player = Player(self.player_x, self.player_y, self.scale)
+                    break
+        self.player = Player(self.player_x, self.player_y,
+                             self.scale, 'player.png')
     
     def handle_all(self, clock, scenes):
         next_scene = self.handle_input(scenes)
-        if next_scene != scenes['menu']:
+        if next_scene != scenes['menu'] and next_scene != scenes['win_screen']:
             self.render(clock)
         return next_scene
 
@@ -137,21 +151,23 @@ class Game:
                 if event.key == pygame.K_ESCAPE:
                     self.__init__(self.level_name)
                     return scenes['menu']
-                elif (event.key == pygame.K_DOWN and
-                      self.maze[self.player.x][self.player.y + 1].cell_type != CellType.FLOOR):
-                    self.player.y += 1
-                elif (event.key == pygame.K_UP and
-                      self.maze[self.player.x][self.player.y - 1].cell_type != CellType.FLOOR):
-                    self.player.y -= 1
-                elif (event.key == pygame.K_LEFT and
-                      self.maze[self.player.x - 1][self.player.y].cell_type != CellType.FLOOR):
-                    self.player.x -= 1
-                elif (event.key == pygame.K_RIGHT and
-                      self.maze[self.player.x + 1][self.player.y].cell_type != CellType.FLOOR):
-                    self.player.x += 1
+                elif event.key == pygame.K_DOWN and self.player.y < self.y - 1:
+                      if self.maze[self.player.x][self.player.y + 1].cell_type != CellType.FLOOR:
+                          self.player.y += 1
+                elif event.key == pygame.K_UP and self.player.y > 0:
+                      if self.maze[self.player.x][self.player.y - 1].cell_type != CellType.FLOOR:
+                          self.player.y -= 1
+                elif event.key == pygame.K_LEFT and self.player.x > 0:
+                      if self.maze[self.player.x - 1][self.player.y].cell_type != CellType.FLOOR:
+                          self.player.x -= 1
+                elif event.key == pygame.K_RIGHT and self.player.x < self.x - 1:
+                      if self.maze[self.player.x + 1][self.player.y].cell_type != CellType.FLOOR:
+                          self.player.x += 1
 
         if self.maze[self.player.x][self.player.y].cell_type == CellType.END:
+            self.render(clock)
             print('Winner!')
+            self.__init__(self.level_name)
             return scenes['win_screen']
 
         return self
@@ -167,6 +183,13 @@ class Game:
 
 class WinScreen:
     def handle_all(self, clock, scenes):
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                sys.exit()
+
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    return scenes['menu']
         return self
 
         
